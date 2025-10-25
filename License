@@ -1,0 +1,7 @@
+
+---
+
+## **7️⃣ Optional: requirements.txt**
+
+```bash
+pip freeze > requirements.txt
