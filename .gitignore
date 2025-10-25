@@ -14,7 +14,6 @@ venv/
 # Data
 *.csv
 *.tsv
-data/
 *.pkl
 *.joblib
 
