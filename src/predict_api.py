@@ -1,33 +1,49 @@
-# predict_api.py
 import joblib
 import pandas as pd
 
-# Load trained model, scaler, and feature columns
 model = joblib.load("models/random_forest_model.pkl")
 scaler = joblib.load("models/scaler.pkl")
-feature_columns = joblib.load("models/feature_columns.pkl")  # saved X_train columns
+feature_columns = joblib.load("models/feature_columns.pkl")
 
-# Example: new customer data (can be partial, only key info)
-new_data = pd.DataFrame([
-    {
-        "tenure": 5,
-        "MonthlyCharges": 80,
-        "Contract": "Month-to-month",
-        "PaymentMethod": "Electronic check",
-        # You can leave out other features; they will be filled with 0
-    }
-])
+# Minimal input
+new_raw = pd.DataFrame([{
+    "gender": "Female",
+    "SeniorCitizen": 0,
+    "Partner": "No",
+    "Dependents": "No",
+    "tenure": 5,
+    "PhoneService": "Yes",
+    "MultipleLines": "No",
+    "InternetService": "DSL",
+    "OnlineSecurity": "No",
+    "OnlineBackup": "No",
+    "DeviceProtection": "No",
+    "TechSupport": "No",
+    "StreamingTV": "No",
+    "StreamingMovies": "No",
+    "Contract": "Month-to-month",
+    "PaperlessBilling": "Yes",
+    "PaymentMethod": "Electronic check",
+    "MonthlyCharges": 80,
+    "TotalCharges": 400
+}])
 
-# Encode categorical features using get_dummies
-new_data = pd.get_dummies(new_data, drop_first=True)
+# One-hot encode all categorical features
+new_data = pd.get_dummies(new_raw, drop_first=False)
 
-# Align columns with training features, fill missing with 0
-new_data = new_data.reindex(columns=feature_columns, fill_value=0)
+# Add missing columns (those in feature_columns but not in new_data) with 0
+for col in feature_columns:
+    if col not in new_data.columns:
+        new_data[col] = 0
 
-# Scale numeric features
-numeric_features = new_data.select_dtypes(include=['int64', 'float64']).columns
+# Reorder columns to match training
+new_data = new_data[feature_columns]
+
+# Scale numeric columns
+numeric_features = scaler.feature_names_in_  # numeric columns seen during training
 new_data[numeric_features] = scaler.transform(new_data[numeric_features])
 
-# Make prediction
+# Predict
 prediction = model.predict(new_data)
 print("Prediction (0=No Churn, 1=Churn):", prediction)
+
